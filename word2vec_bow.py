@@ -88,7 +88,7 @@ def train_word2vec_bow(data_path, output_dir, dims=[100, 200, 300], n_clusters=5
         # Save cluster assignments
         df_out = pd.DataFrame({
             'id': df['id'],
-            'subreddit': df.get('subreddit', 'technology'),
+            'text': df.get('text'),
             'cluster': labels
         })
         df_out.to_csv(f"{output_dir}/reddit_vector_{dim}.csv", index=False)
