@@ -29,6 +29,8 @@ def parse_args():
     p.add_argument("--tsne", action="store_true", help="Also compute t-SNE plots (slower)")
     p.add_argument("--out", type=str, default="results.csv",
                    help="CSV to save key metrics (one row per configuration)")
+    p.add_argument("--out_dir", type=str, default="results_doc2vec",
+                   help="Directory to save per-dimension vectors (reddit_vector_*.csv), plots, and metrics_summary.csv")
     return p.parse_args()
 
 
@@ -139,14 +141,18 @@ def plot_2d(X, labels, method="pca", title="", save_path=None, cluster_keywords=
     plt.close()
 
 
-def embeddings_and_clusters(csv_path: Path, k: int, do_tsne: bool, out_csv: Path):
+def embeddings_and_clusters(csv_path: Path, k: int, do_tsne: bool, out_csv: Path, out_dir: Path):
     df = load_and_tokenize(csv_path)
+    # Prepare IDs (use 'id' column if present, else row indices)
+    ids = df["id"].astype(str).tolist() if "id" in df.columns else [str(i) for i in range(len(df))]
+    # Prepare output dir (vectors/plots/metrics)
+    out_dir.mkdir(parents=True, exist_ok=True)
     docs = tagged_docs(df["tokens"])
     n_posts = len(df)
     print(f"Dataset: {n_posts} posts\n")
 
     models = train_models(docs)
-    fig_dir = Path("./figs")
+    fig_dir = out_dir / "figs"
     fig_dir.mkdir(exist_ok=True)
 
     metrics_rows = []
@@ -155,6 +161,16 @@ def embeddings_and_clusters(csv_path: Path, k: int, do_tsne: bool, out_csv: Path
         print(f"\nRunning {name}...")
         X = infer_embeddings(model, docs)
         labels, sil, km = kmeans_cosine(X, k)
+        # --- Save per-document vectors & clusters in a unified schema (id, cluster, v0...v{dim-1})
+        dim = model.vector_size
+        vec_cols = [f"v{i}" for i in range(dim)]
+        out_df = pd.DataFrame(X, columns=vec_cols)
+        out_df.insert(0, "cluster", labels)
+        out_df.insert(0, "id", ids)
+        csv_path = out_dir / f"reddit_vector_{dim}.csv"
+        out_df.to_csv(csv_path, index=False)
+        print(f"Saved vectors: {csv_path}")
+
         cluster_counts = np.bincount(labels)
 
         print(f"Silhouette (cosine): {sil:.4f}")
@@ -162,15 +178,17 @@ def embeddings_and_clusters(csv_path: Path, k: int, do_tsne: bool, out_csv: Path
 
         cluster_keywords = cluster_top_keywords(df["tokens"].tolist(), labels, topn=5)
         plot_2d(X, labels, method="pca",
-                title=f"{name} PCA (K={k})",
-                save_path=fig_dir / f"{name}_pca.png",
+                title=f"Doc2Vec {dim}-dim Clusters, silhouette={sil:.3f}",
+                save_path=fig_dir / f"pca_{dim}.png",
                 cluster_keywords=cluster_keywords)
         if do_tsne:
             plot_2d(X, labels, method="tsne",
-                    title=f"{name} t-SNE (K={k})",
-                    save_path=fig_dir / f"{name}_tsne.png",
+                    title=f"Doc2Vec {dim}-dim t-SNE (K={k})",
+                    save_path=fig_dir / f"tsne_{dim}.png",
                     cluster_keywords=cluster_keywords)
         metrics_rows.append({
+            "Method": "Doc2Vec",
+            "Dim": dim,
             "Config": name,
             "K": k,
             "NumPosts": n_posts,
@@ -178,13 +196,21 @@ def embeddings_and_clusters(csv_path: Path, k: int, do_tsne: bool, out_csv: Path
             "ClusterSizes": ",".join(map(str, cluster_counts.tolist()))
         })
 
-    pd.DataFrame(metrics_rows).to_csv(out_csv, index=False)
+    metrics_df = pd.DataFrame(metrics_rows)
+    metrics_df.to_csv(out_csv, index=False)
     print(f"\nKey metrics saved to {out_csv}")
+    # Also keep a consolidated metrics file under out_dir for Part 3
+    ms_path = out_dir / "metrics_summary.csv"
+    if ms_path.exists():
+        old = pd.read_csv(ms_path)
+        metrics_df = pd.concat([old, metrics_df], ignore_index=True)
+    metrics_df.to_csv(ms_path, index=False)
+    print(f"Metrics summary updated: {ms_path}")
 
 def main():
     args = parse_args()
     csv_path = Path(args.data)
-    embeddings_and_clusters(csv_path, k=args.k, do_tsne=args.tsne, out_csv=Path(args.out))
+    embeddings_and_clusters(csv_path, k=args.k, do_tsne=args.tsne, out_csv=Path(args.out), out_dir=Path(args.out_dir))
 
 if __name__ == "__main__":
     main()
