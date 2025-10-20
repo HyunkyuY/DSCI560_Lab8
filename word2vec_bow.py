@@ -91,7 +91,13 @@ def train_word2vec_bow(data_path, output_dir, dims=[100, 200, 300], n_clusters=5
             'text': df.get('text'),
             'cluster': labels
         })
-        df_out.to_csv(f"{output_dir}/reddit_vector_{dim}.csv", index=False)
+        df_out.to_csv(f"{output_dir}/reddit_vector_{dim}_detailed.csv", index=False)
+        
+        # Matrix version: full vector representation (for comparison)
+        vec_out = pd.DataFrame(vectors, columns=[f'v{i}' for i in range(vectors.shape[1])])
+        vec_out.insert(0, 'cluster', labels)
+        vec_out.insert(0, 'id', df['id'].values)
+        vec_out.to_csv(f"{output_dir}/reddit_vector_{dim}.csv", index=False)
         
         # PCA Visualization
         pca = PCA(n_components=2)

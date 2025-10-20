@@ -65,21 +65,27 @@ After running, the output folder (e.g. `results_word2vec/`) will contain:
 
 ```
 results_word2vec/
+├── reddit_vector_100_detailed.csv
 ├── reddit_vector_100.csv
+├── reddit_vector_200_detailed.csv
 ├── reddit_vector_200.csv
+├── reddit_vector_300_detailed.csv
 ├── reddit_vector_300.csv
 ├── pca_100.png
 ├── pca_200.png
 ├── pca_300.png
 └── metrics_summary.csv
+
 ```
 
 **File descriptions:**
+
 | File | Description |
 |------|--------------|
-| `reddit_vector_*.csv` | Cluster assignments for each document (by dimension) |
-| `pca_*.png` | 2D visualization of document clusters |
-| `metrics_summary.csv` | Silhouette scores for each embedding dimension |
+| **`reddit_vector_[dim]_detailed.csv`** | Contains document IDs, text, and their assigned cluster labels. This version is mainly for qualitative inspection — useful to check what kind of posts fall into the same cluster.                                                           |
+| **`reddit_vector_[dim].csv`**   | Contains only numerical embeddings and cluster labels. Each row represents one document, with columns `v0 ... vN` corresponding to semantic bin frequencies. This version is used for quantitative analysis or comparison with other models. |
+| **`pca_[dim].png`**                    | 2D PCA visualization showing the distribution of clustered document embeddings for each tested dimension. |
+| **`metrics_summary.csv`**              | Summary of silhouette scores for each embedding dimension. |
 
 ---
 
