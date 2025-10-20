@@ -117,7 +117,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Train Word2Vec + BOW embeddings on Reddit posts")
     parser.add_argument("--data", type=str, default="technology_posts.csv", help="Path to CSV data")
     parser.add_argument("--out", type=str, default="result_word2vec", help="Output directory")
-    parser.add_argument("--clusters", type=int, default=5, help="Number of document clusters")
+    parser.add_argument("--clusters", type=int, default=8, help="Number of document clusters")
     args = parser.parse_args()
     
     train_word2vec_bow(args.data, args.out, n_clusters=args.clusters)
