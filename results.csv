@@ -1,4 +1,4 @@
 Method,Dim,Config,K,NumPosts,Silhouette,ClusterSizes
-Doc2Vec,100,Configuration A,8,992,0.905811,"2,18,1,925,2,2,41,1"
-Doc2Vec,200,Configuration B,8,992,0.252836,"17,24,35,161,511,95,144,5"
-Doc2Vec,300,Configuration C,8,992,0.271483,"125,125,50,72,240,221,81,78"
+Doc2Vec,100,Configuration A,5,992,0.915096,"22,48,3,2,917"
+Doc2Vec,200,Configuration B,5,992,0.663949,"97,10,858,12,15"
+Doc2Vec,300,Configuration C,5,992,0.456578,"624,101,99,140,28"

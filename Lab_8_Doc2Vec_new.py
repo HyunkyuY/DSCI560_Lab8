@@ -5,6 +5,9 @@ from matplotlib.lines import Line2D
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import re
+import nltk
+from nltk.corpus import stopwords as nltk_stopwords
 from gensim.utils import simple_preprocess
 from gensim.models.doc2vec import Doc2Vec, TaggedDocument
 from sklearn.preprocessing import normalize
@@ -52,8 +55,24 @@ def load_and_tokenize(csv_path: Path) -> pd.DataFrame:
     df["raw_text"] = df.apply(join_text, axis=1).fillna("").astype(str)
     df = df[df["raw_text"].str.strip().astype(bool)].reset_index(drop=True)
 
+    # ensure nltk resources available (quiet)
+    try:
+        nltk.data.find('tokenizers/punkt')
+    except Exception:
+        nltk.download('punkt', quiet=True)
+    try:
+        nltk.data.find('corpora/stopwords')
+    except Exception:
+        nltk.download('stopwords', quiet=True)
+    # use NLTK english stopwords to match word2vec preprocessing
+    stop_words = set(nltk_stopwords.words('english'))
+
     def tokenize(txt):
-        return simple_preprocess(txt, deacc=True, min_len=2, max_len=30)
+        # remove non-letters, lowercase
+        text = re.sub(r'[^a-zA-Z\s]', '', str(txt).lower())
+        # nltk tokenize, filter stopwords and short tokens
+        tokens = [t for t in nltk.word_tokenize(text) if t not in stop_words and len(t) > 2]
+        return tokens
 
     df["tokens"] = df["raw_text"].map(tokenize)
     return df
@@ -72,12 +91,17 @@ STOPWORDS = {
 def cluster_top_keywords(tokens_list, labels, topn=5):
     mapping = {}
     clusters = sorted(set(labels.tolist()))
+    # try to use nltk stopwords if available (keeps preprocessing consistent with word2vec)
+    try:
+        sw = set(nltk.corpus.stopwords.words('english'))
+    except Exception:
+        sw = STOPWORDS
     for c in clusters:
         idx = np.where(labels == c)[0]
         counts = Counter()
         for i in idx:
             toks = tokens_list[i]
-            filtered = [t for t in toks if t.isalpha() and len(t) > 2 and t not in STOPWORDS]
+            filtered = [t for t in toks if t.isalpha() and len(t) > 2 and t not in sw]
             counts.update(filtered)
         mapping[c] = [w for w, _ in counts.most_common(topn)]
     return mapping
