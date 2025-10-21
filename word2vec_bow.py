@@ -81,7 +81,7 @@ def train_word2vec_bow(data_path, output_dir, dims=[100, 200, 300], n_clusters=5
         # Document-level clustering
         km_doc = KMeans(n_clusters=n_clusters, random_state=42, n_init=10)
         labels = km_doc.fit_predict(vectors)
-        score = silhouette_score(vectors, labels)
+        score = silhouette_score(vectors, labels, metric='cosine')
         results.append({'dimension': dim, 'silhouette': score})
         print(f"dim={dim} | silhouette={score:.4f}")
         
