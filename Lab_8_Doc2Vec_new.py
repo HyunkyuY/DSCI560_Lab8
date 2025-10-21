@@ -26,7 +26,7 @@ random.seed(RANDOM_STATE)
 
 def parse_args():
     p = argparse.ArgumentParser(description="Doc2Vec + KMeans on Reddit posts")
-    p.add_argument("--data", type=str, default="technology_posts.csv",
+    p.add_argument("--data", type=str, default="technology_posts_with_article.csv",
                    help="Path to the fixed Reddit posts CSV")
     p.add_argument("--k", type=int, default=8, help="Number of clusters for KMeans")
     p.add_argument("--tsne", action="store_true", help="Also compute t-SNE plots (slower)")
