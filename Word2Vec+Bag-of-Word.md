@@ -55,7 +55,7 @@ python word2vec_bow.py --data technology_posts.csv --out results_word2vec --clus
 |-----------|--------------|----------|
 | `--data` | Path to CSV input file | `technology_posts.csv` |
 | `--out` | Output directory | `result_word2vec` |
-| `--clusters` | Number of document clusters | `8` |
+| `--clusters` | Number of document clusters | `5` |
 
 ---
 
